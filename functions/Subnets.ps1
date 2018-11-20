@@ -1,5 +1,5 @@
-﻿function get-phpipamAllSubnets{
-    Get-PhpIpamAllSections|Get-PhpIpamSubnetsBySectionID
+﻿function Get-PhpIpamAllSubnets{
+    Get-PhpIpamAllSections | Get-PhpIpamSubnetsBySectionID
 }
 
 function Get-PhpIpamSubnetByID{

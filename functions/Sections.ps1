@@ -1,5 +1,5 @@
 function Get-PhpIpamAllSections{
-    return $(Invoke-PhpIpamExecute -method get -controller sections).data
+    return (Invoke-PhpIpamExecute -method get -controller sections).data
 }
 
 function Get-PhpIpamSectionsByID{
