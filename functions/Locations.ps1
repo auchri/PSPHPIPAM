@@ -2,6 +2,10 @@ function Get-PhpIpamAllLocations {
     return (Invoke-PhpIpamExecute -method get -controller tools -identifiers @('locations')).data
 }
 
+function Get-PhpIpamLocation([int32] $Id) {
+    return (Invoke-PhpIpamExecute -method get -controller tools -identifiers @('locations', $Id)).data
+}
+
 function New-PhpIpamLocation() {
     param (
         [string] $Name,
