@@ -149,25 +149,8 @@ function Invoke-PhpIpamExecute{
         } else {
         # check whether Global AppID and APPkey exist
         if($Global:PhpipamAppID -and $Global:PhpipamAppKey){
-            # start to build uri
-            $query_hash=$null
-            if($identifiers -and $identifiers.count -gt 0){
-                $query_hash=convert-identifiersArrayToHashTable $identifiers
-                $query_hash=$query_hash+$params
-            }else{
-                $query_hash=@{}+$params
-            }
-            #$query_hash.Add("controller",$controller)
-            #$json_request=$query_hash|ConvertTo-Json -Compress 
-            #Write-error "json_request: $(convertto-json $json_request)"
-            #$crypt_request=Protect-Rijndael256ECB -Key $Global:PhpipamAppKey -Plaintext $json_request
-            #$Encode_Crypt_request=[System.Web.HttpUtility]::UrlEncode($crypt_request)
-
             $uri = Get-PhpIpamUrl -PhpIpamApiUrl $Global:PhpipamApiUrl -AppID $Global:PhpipamAppID -Controller $controller -Identifiers $identifiers
             $headers.Add("token",$global:PhpIpamAppKey)
-
-            # no need to build header
-
         }else{
             throw "No AppID and AppKey can be used,please use new-PhpIpamSession command first to check and store AppID and AppKey"
         }
