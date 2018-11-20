@@ -1,92 +1,45 @@
-﻿
-# Function to disable checking untrust cert
-# if phpipam was running on https and using untrust cert ,invoke-restMethod can not handle this
-function disable-CertsCheck {
-    add-type -TypeDefinition  @"
-        using System.Net;
-        using System.Security.Cryptography.X509Certificates;
-        public class TrustAllCertsPolicy : ICertificatePolicy {
-            public bool CheckValidationResult(
-                ServicePoint srvPoint, X509Certificate certificate,
-                WebRequest request, int certificateProblem) {
-                return true;
-            }
-        }
-"@
-    [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
-}
+﻿function Get-PhpIpamUrl {
 
-disable-CertsCheck
-function Protect-Rijndael256ECB {
+   <#
+     .DESCRIPTION
+      Builds the url for the calls
+      
+      .PARAMETER $PhpIpamApiUrl
+      url which phpipam use for example http://ipam/api/
+
+      .PARAMETER $AppID
+      the AppID of using the API.
+
+      .PARAMETER $Controller
+      the controller of the api
+
+      .PARAMETER $Identifiers
+      the identifiers array
+
+  #>
     param(
-        [string]$Key,
-        [string]$Plaintext
-    )
+        
+        [parameter(mandatory=$true, HelpMessage="Enter the Api Url of IppIpam")]
+        [validateScript({$_.startswith("http")})]
+        [string] $PhpIpamApiUrl,
 
-    $RijndaelProvider = New-Object -TypeName System.Security.Cryptography.RijndaelManaged
+        [parameter(mandatory=$true, HelpMessage="Enter the AppID of PhpIpam")]
+        [string] $AppID,
 
-    # Set block size to 256 to imitate MCRYPT_RIJNDAEL_256
-    $RijndaelProvider.BlockSize = 256
-    # Make sure we use ECB mode, or the generated IV will fuck up the first block upon decryption
-    $RijndaelProvider.Mode      = [System.Security.Cryptography.CipherMode]::ECB
-    $RijndaelProvider.Padding = [system.security.cryptography.PaddingMode]::Zeros;
-    $RijndaelProvider.IV=[byte[]]@(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
-    $RijndaelProvider.Key       = [system.Text.Encoding]::Default.GetBytes($key)
+        [parameter(mandatory=$true, HelpMessage="Enter the controller of the api")]
+        [string] $Controller,
 
-    # This object will take care of the actual cryptographic transformation
-    $Encryptor = $RijndaelProvider.CreateEncryptor($RijndaelProvider.Key,$RijndaelProvider.IV)
+        [parameter(mandatory=$false,HelpMessage="Enter the identifiers array")]
+        [array]$Identifiers=@()
+    )    
+    
+    if($Identifiers.Count -gt 0) {
+        $parameters = (($identifiers -join '/')+'/')
+    } else {
+        $parameters = ''
+    }
 
-    # Set up a memorystream that we can write encrypted data back to
-    $EncMemoryStream = New-Object System.IO.MemoryStream
-    $EncCryptoStream = New-Object System.Security.Cryptography.CryptoStream -ArgumentList $EncMemoryStream,$Encryptor,"Write"
-    $EncStreamWriter = New-Object System.IO.StreamWriter -ArgumentList $EncCryptoStream
-
-    # When we write data back to the CryptoStream, it'll get encrypted and written back to the MemoryStream
-    $EncStreamWriter.Write($Plaintext)
-
-    # Close the writer
-    $EncStreamWriter.Close()
-    # Close the CryptoStream (pads and flushes any data still left in the buffer)
-    $EncCryptoStream.Close()
-    $EncMemoryStream.Close()
-
-    # Read the encrypted message from the memory stream
-    $Cipher     = $EncMemoryStream.ToArray() -as [byte[]]
-    $CipherText = [convert]::ToBase64String($Cipher)
-
-    # return base64 encoded encrypted string
-    return $CipherText
-}
-
-function UnProtect-Rijndael256ECB {
-    param(
-        [STRING]$Key,
-        [string]$CipherText
-    )
-
-    $RijndaelProvider = New-Object -TypeName System.Security.Cryptography.RijndaelManaged
-
-    $RijndaelProvider.BlockSize = 256
-    $RijndaelProvider.Mode      = [System.Security.Cryptography.CipherMode]::ECB
-    $RijndaelProvider.Key       = [system.Text.Encoding]::default.GetBytes($key)
-    $RijndaelProvider.Padding = [system.security.cryptography.PaddingMode]::Zeros;
-    $RijndaelProvider.IV=[byte[]]@(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 )
-    $Decryptor = $RijndaelProvider.CreateDecryptor($RijndaelProvider.Key,$RijndaelProvider.IV)
-
-    # Reverse process: Base64Decode first, then populate memory stream with ciphertext and lastly read decrypted data through cryptostream
-    $Cipher = [convert]::FromBase64String($CipherText) -as [byte[]]
-
-    $DecMemoryStream = New-Object System.IO.MemoryStream -ArgumentList @(,$Cipher)
-    $DecCryptoStream = New-Object System.Security.Cryptography.CryptoStream -ArgumentList $DecMemoryStream,$Decryptor,$([System.Security.Cryptography.CryptoStreamMode]::Read)
-    $DecStreamWriter = New-Object System.IO.StreamReader -ArgumentList $DecCryptoStream
-
-    $NewPlainText = $DecStreamWriter.ReadToEnd()
-
-    $DecStreamWriter.Close()
-    $DecCryptoStream.Close()
-    $DecMemoryStream.Close()
-
-    return $NewPlainText
+    return "{0}/{1}/{2}/{3}" -f $PhpIpamApiUrl,$AppID, $Controller, $parameters
 }
 
 function Invoke-PhpIpamExecute{
@@ -116,10 +69,7 @@ function Invoke-PhpIpamExecute{
 
       .PARAMETER $headers
       you can specify you own headers here.
-
-      .PARAMETER $contentType
-      specify your contenType
-
+      
       .EXAMPLE
       invoke-PHPIpamExecute -method get  -controller sections 
 
@@ -152,24 +102,20 @@ function Invoke-PhpIpamExecute{
         [parameter(mandatory=$false,HelpMessage="Enter the params hashtable")]
         [validateScript({$_ -is [hashtable] -or $_ -is [psCustomObject]})]
         $params=@{},
-
+        
+        [parameter(mandatory=$false,HelpMessage="Enter the params hashtable")]
         [validateScript({$_ -is [hashtable]})]
-        $headers=@{},
-
-        [parameter(mandatory=$false)]
-        $ContentType=$null
+        $headers=@{}
 
     )
-     # Init Uri
-        $uri=""
 
-        # lowercase controller
-        $controller=$controller.ToLower()
-        if($params -is [psCustomObject]){
-            $params=$params|ConvertTo-HashtableFromPsCustomObject
-        }
+    # lowercase controller
+    $controller=$controller.ToLower()
+    if($params -is [psCustomObject]){
+        $params=$params|ConvertTo-HashtableFromPsCustomObject
+    }
 
-        if($global:phpipamTokenAuth){
+    if($global:phpipamTokenAuth -eq $true) {
             Write-Debug "Using TokenAuth,Test Token Status"
             $ipamstatus=test-PhpIpamToken
             if($ipamstatus -eq 'Expired'){
@@ -200,62 +146,62 @@ function Invoke-PhpIpamExecute{
                     $headers.Add("token",$global:phpipamToken)
                 }
             }
-        }
-
-         if($global:phpipamTokenAuth -eq $false){
-            # check whether Global AppID and APPkey exist
-            if($Global:PhpipamAppID -and $Global:PhpipamAppKey){
-                # start to build uri
-                $query_hash=$null
-                if($identifiers -and $identifiers.count -gt 0){
-                    $query_hash=convert-identifiersArrayToHashTable $identifiers
-                    $query_hash=$query_hash+$params
-                }else{
-                    $query_hash=@{}+$params
-                }
-                $query_hash.Add("controller",$controller)
-                $json_request=$query_hash|ConvertTo-Json -Compress 
-                Write-Verbose "json_request: $(convertto-json $json_request)"
-                $crypt_request=Protect-Rijndael256ECB -Key $Global:PhpipamAppKey -Plaintext $json_request
-                $Encode_Crypt_request=[System.Web.HttpUtility]::UrlEncode($crypt_request)
-
-                $uri="{0}/?app_id={1}&enc_request={2}" -f $Global:PhpipamApiUrl,$Global:PhpipamAppID,$Encode_Crypt_request
-
-                # no need to build header
-
+        } else {
+        # check whether Global AppID and APPkey exist
+        if($Global:PhpipamAppID -and $Global:PhpipamAppKey){
+            # start to build uri
+            $query_hash=$null
+            if($identifiers -and $identifiers.count -gt 0){
+                $query_hash=convert-identifiersArrayToHashTable $identifiers
+                $query_hash=$query_hash+$params
             }else{
-                throw "No AppID and AppKey can be used,please use new-PhpIpamSession command first to check and store AppID and AppKey"
+                $query_hash=@{}+$params
             }
-         }
+            #$query_hash.Add("controller",$controller)
+            #$json_request=$query_hash|ConvertTo-Json -Compress 
+            #Write-error "json_request: $(convertto-json $json_request)"
+            #$crypt_request=Protect-Rijndael256ECB -Key $Global:PhpipamAppKey -Plaintext $json_request
+            #$Encode_Crypt_request=[System.Web.HttpUtility]::UrlEncode($crypt_request)
 
-         if($global:phpipamTokenAuth -eq $null){
-                throw "No Auth Method exist,please use new-PhpIpamSession command first to specify auth method and infos"
-         }
+            $uri = Get-PhpIpamUrl -PhpIpamApiUrl $Global:PhpipamApiUrl -AppID $Global:PhpipamAppID -Controller $controller -Identifiers $identifiers
+            $headers.Add("token",$global:PhpIpamAppKey)
 
-         try{
-            $r=Invoke-RestMethod -Method $method -Headers $headers  -Uri $uri -body $params -ContentType $ContentType
-            if($r -and $r -is [System.Management.Automation.PSCustomObject]){
-                return $r
-            }else{
-                # to process unvliad json output like this
-                # <div class='alert alert-danger'>Error: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'cuser' cannot be null</div>{"code":201,"success":true,"data":"Section created"}
-                if($r -and $r -is [System.String]){
-                    $objmatch=([regex]'(\{\s*"code"\s*:\s*(.+?)\s*.+?\})').Match($r)
-                    if($objmatch.Success){
-                        try{
-                            $r=ConvertFrom-Json -InputObject $objmatch.Groups[1].Value -ErrorAction Stop
-                            return $r
-                        }catch{
-                            throw $("Can not parse the output [" + $r +']')
-                        }
-                    }else{
+            # no need to build header
+
+        }else{
+            throw "No AppID and AppKey can be used,please use new-PhpIpamSession command first to check and store AppID and AppKey"
+        }
+    }
+
+    if($global:phpipamTokenAuth -eq $null){
+        throw "No Auth Method exist,please use new-PhpIpamSession command first to specify auth method and infos"
+    }    
+                
+    try{
+        $r = Invoke-RestMethod -Method $method -Headers $headers  -Uri $uri -body $params
+
+        if($r -ne $null -and $r -is [System.Management.Automation.PSCustomObject]){
+            return $r
+        }else{
+            # to process unvliad json output like this
+            # <div class='alert alert-danger'>Error: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'cuser' cannot be null</div>{"code":201,"success":true,"data":"Section created"}
+            if($r -ne $null -and $r -is [System.String]){
+                $objmatch=([regex]'(\{\s*"code"\s*:\s*(.+?)\s*.+?\})').Match($r)
+                if($objmatch.Success){
+                    try{
+                        $r = ConvertFrom-Json -InputObject $objmatch.Groups[1].Value -ErrorAction Stop
+                        return $r
+                    }catch{
                         throw $("Can not parse the output [" + $r +']')
                     }
+                }else{
+                    throw $("Can not parse the output [" + $r +']')
                 }
             }
-        }catch{
-            throw $_.ErrorDetails.message
         }
+    } catch {
+        throw $_.ErrorDetails.message
+    }
 }
 
 function Remove-PhpIpamSession{
@@ -316,7 +262,7 @@ function New-PhpIpamSession{
       New-PhpIpamSession -useCredAuth -phpIpamApiUrl http://ipam/api/ -username username -password password -appid script
 
       .EXAMPLE
-      New-PhpIpamSession -useAppKeyAuth -PhpIpamApiUrl http://ipam/api/ -appid script -appkey 'de36328dbe3df0bc7d39ff2306e9aesa'
+      New-PhpIpamSession -useAppKeyAuth -PhpIpamApiUrl http://ipam/api/ -appid 'script' -appkey 'de36328dbe3df0bc7d39ff2306e9aesa'
 
   #>
         param(
@@ -332,6 +278,7 @@ function New-PhpIpamSession{
         [parameter(mandatory=$true, HelpMessage="Enter the Api Url of IppIpam")]
         [validatescript({$_.startswith("http")})]
         [string]$PhpIpamApiUrl,
+
         [parameter(mandatory=$true,ParameterSetName="UseCredAuth", HelpMessage="Enter the AppID of PhpIpam")]
         [parameter(mandatory=$true,ParameterSetName="UseAppKeyAuth", HelpMessage="Enter the AppID of PhpIpam")]
         [string]$AppID,
@@ -385,30 +332,25 @@ function New-PhpIpamSession{
         }
 
         if($useAppKeyAuth){
-            $request_json=@{'controller'='sections'}|ConvertTo-Json -Compress
-            $enc_request=Protect-Rijndael256ECB -Key $AppKey -Plaintext $request_json
-            $Encode_Crypt_request=[System.Web.HttpUtility]::UrlEncode($enc_request)
-            $uri="{0}/?app_id={1}&enc_request={2}" -f $PhpIpamApiUrl,$AppID,$Encode_Crypt_request
+            $uri = Get-PhpIpamUrl -PhpIpamApiUrl $PhpIpamApiUrl -AppID $AppID -Controller 'user'
             
-            try{
-                $r=Invoke-RestMethod -Method get -Uri $uri 
-                write-debug $r
-                if($r -and $r.success){
-                # success
+            try {
+                Invoke-RestMethod -Method get -Uri $uri -Headers @{'Token' = $AppKey}
+            } catch {
+                if($_.Exception.Response.StatusCode.value__ -eq 409) { # Key is valid
                     $global:PhpIpamApiUrl =$PhpIpamApiUrl
                     $global:PhpIpamAppID=$AppID
                     $global:PhpIpamAppKey=$AppKey
                     $global:PhpIpamTokenAuth=$false
                     return $true
-                }else{
-                    return $false
                 }
 
-            }catch{
                 write-error $_.ErrorDetails.message
-                return $null 
+                return $false 
             }
         }
+
+        return $false
 }
 
 function Test-PhpIpamToken{
