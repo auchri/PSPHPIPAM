@@ -11,10 +11,8 @@ function New-PhpIpamLocation() {
         [double] $Long
     )
 
+    # Ensure that double values have a dot instead of , - not handled correctly by phpipam :)
     $parameters = @{"name" = $Name; "description" = $Description; "address" = $Address; "lat" = ($Lat -replace ',', '.'); "long" = ($Long -replace ',', '.') }
-
-    $parameters
-
     $response = Invoke-PhpIpamExecute -method post -controller tools -identifiers @('locations') -params $parameters
 
     return $response.success
