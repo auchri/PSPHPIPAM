@@ -1,4 +1,4 @@
-function Get-PhpIpamAllLocations {
+function Get-PhpIpamLocations {
     return (Invoke-PhpIpamExecute -method get -controller tools -identifiers @('locations')).data
 }
 
@@ -50,11 +50,11 @@ function Update-PhpIpamLocation() {
     }
 
     if($PSBoundParameters.ContainsKey('Lat')) {
-        $existingData.lat = $Lat
+        $existingData.lat = ($Lat -replace ',', '.')
     }
 
     if($PSBoundParameters.ContainsKey('Long')) {
-        $existingData.long = $Long
+        $existingData.long = ($Long -replace ',', '.')
     }
 
     return Invoke-PhpIpamExecute -method patch -controller tools -identifiers @('locations', $Id) -params $existingData
