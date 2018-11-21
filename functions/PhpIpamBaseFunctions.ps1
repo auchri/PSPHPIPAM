@@ -92,7 +92,7 @@ function Invoke-PhpIpamExecute{
         [string]$method="get",
 
         [parameter(mandatory=$true,HelpMessage="Enter the controller (API Endpoint)")]
-        [validateSet("sections","subnets","folders","addresses","vlans","l2domains","vfr","tools","prefix","user")]
+        [validateSet("user", "devices", "tools")]
         [alias('Endpoint')]
         [string]$controller="sections",
 
