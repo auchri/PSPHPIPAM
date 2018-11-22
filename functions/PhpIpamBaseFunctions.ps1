@@ -1,4 +1,16 @@
-﻿function Get-PhpIpamUrl {
+﻿function Add-PhpIpamCustomFieldsToExistingData([psobject] $ExistingData, [hashtable] $CustomFields) {
+    foreach ($key in $CustomFields.Keys) {
+        $value = $CustomFields.Item($key)
+
+        if(([bool]($existingData.PSobject.Properties.name -match $key))) {
+            $existingData.$key = $value
+        } else {
+            $existingData | Add-Member -MemberType NoteProperty -Name $key -Value $value
+        }
+    }
+}
+
+function Get-PhpIpamUrl {
 
    <#
      .DESCRIPTION

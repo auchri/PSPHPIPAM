@@ -12,11 +12,14 @@ function New-PhpIpamLocation() {
         [string] $Description,
         [string] $Address,
         [double] $Lat,
-        [double] $Long
+        [double] $Long,
+        [Hashtable] $CustomFields = @{}
     )
 
     # Ensure that double values have a dot instead of , - not handled correctly by phpipam :)
     $parameters = @{"name" = $Name; "description" = $Description; "address" = $Address; "lat" = ($Lat -replace ',', '.'); "long" = ($Long -replace ',', '.') }
+    $parameters += $CustomFields
+
     return Invoke-PhpIpamExecute -method post -controller tools -identifiers @('locations') -params $parameters
 }
 
@@ -31,7 +34,8 @@ function Update-PhpIpamLocation() {
         [string] $Description,
         [string] $Address,
         [double] $Lat,
-        [double] $Long
+        [double] $Long,
+        [Hashtable] $CustomFields = @{}
     )
     
     $existingData = Get-PhpIpamLocation -Id $Id
@@ -55,6 +59,10 @@ function Update-PhpIpamLocation() {
 
     if($PSBoundParameters.ContainsKey('Long')) {
         $existingData.long = ($Long -replace ',', '.')
+    }
+
+    if($PSBoundParameters.ContainsKey('CustomFields')) {
+        Add-PhpIpamCustomFieldsToExistingData -ExistingData $existingData -CustomFields $CustomFields
     }
 
     return Invoke-PhpIpamExecute -method patch -controller tools -identifiers @('locations', $Id) -params $existingData
