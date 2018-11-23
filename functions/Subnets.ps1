@@ -1,218 +1,219 @@
-﻿function Get-PhpIpamAllSubnets{
+﻿function Get-PhpIpamAllSubnets {
     Get-PhpIpamAllSections | Get-PhpIpamSubnetsBySectionID
 }
 
-function Get-PhpIpamSubnetByID{
+function Get-PhpIpamSubnetById {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int] $Id
     )
 
-    begin{
+    return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($Id)).data
+}
 
+function Get-PhpIpamSubnetUsageByID {
+    [cmdletBinding()]
+    Param(
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
+    )
+
+    begin {
+        Write-Verbose $ID
     }
-    process{
-            return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID)).data
-
+    process {
+        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID, "usage")).data
     }
 
-    end{
+    end {
 
     }
 }
 
-function Get-PhpIpamSubnetUsageByID{
+function Get-PhpIpamSubnetFirst_freeByID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID,"usage")).data
+    process {
+        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID, "first_free")).data
     }
 
-    end{
+    end {
 
     }
 }
 
-function Get-PhpIpamSubnetFirst_freeByID{
+function Get-PhpIpamSubnetSlavesByID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID,"first_free")).data
+    process {
+        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID, "slaves")).data
     }
 
-    end{
+    end {
 
     }
 }
 
-function Get-PhpIpamSubnetSlavesByID{
+function Get-PhpIpamSubnetSlaves_RecursiveByID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID,"slaves")).data
+    process {
+        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID, "slaves_recursive")).data
     }
 
-    end{
+    end {
 
     }
 }
 
-function Get-PhpIpamSubnetSlaves_RecursiveByID{
+function Get-PhpIpamSubnetAddressesByID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID,"slaves_recursive")).data
+    process {
+        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID, "addresses")).data
     }
 
-    end{
-
-    }
-}
-
-function Get-PhpIpamSubnetAddressesByID{
-    [cmdletBinding()]
-    Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
-    )
-
-    begin{
-        Write-Verbose $ID
-    }
-    process{
-        return $(Invoke-PhpIpamExecute -method get -controller subnets -identifiers @($ID,"addresses")).data
-    }
-
-    end{
+    end {
 
     }
 }
 
 
-function Remove-PhpIpamSubnetByID{
+function Remove-PhpIpamSubnetByID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
+    process {
         return $(Invoke-PhpIpamExecute -method delete -controller subnets -identifiers @($ID)).success
     }
 
-    end{
+    end {
 
     }
 }
 
 
-function Remove-PhpIpamSubnetAllAddressBySubnetID{
+function Remove-PhpIpamSubnetAllAddressBySubnetID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method delete -controller subnets -identifiers @($ID,"truncate")).success
+    process {
+        return $(Invoke-PhpIpamExecute -method delete -controller subnets -identifiers @($ID, "truncate")).success
     }
 
-    end{
+    end {
 
     }
 }
 
-function Remove-PhpIpamSubnetAllPermissionsBySubnetID{
+function Remove-PhpIpamSubnetAllPermissionsBySubnetID {
     [cmdletBinding()]
     Param(
-         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [int]$ID
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, position = 0)]
+        [int]$ID
     )
 
-    begin{
+    begin {
         Write-Verbose $ID
     }
-    process{
-        return $(Invoke-PhpIpamExecute -method delete -controller subnets -identifiers @($ID,"permissions")).success
+    process {
+        return $(Invoke-PhpIpamExecute -method delete -controller subnets -identifiers @($ID, "permissions")).success
     }
 
-    end{
+    end {
 
     }
 }
 
-function New-PhpIpamSubnet{
-
-    [cmdletBinding()]
+function New-PhpIpamSubnet {
     Param(
-        [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
-        [validateScript({$_ -is [system.collections.hashtable]})]
-        $Params=@{}
+        [ipaddress] $Subnet,
+        [int32] $Mask,
+        [int32] $SectionId,
+        [string] $Description,
+        [int32] $MasterSubnetId,
+        [bool] $ShowName,
+        [bool] $PingSubnet,
+        [bool] $DiscoverSubnet,
+        [bool] $ResolveDns,
+        [int32] $NameserverId,
+        [int32] $ScanAgent,
+        [int32] $Threshold
     )
-    begin{
 
+    $params = @{
+        'subnet' = $Subnet;
+        'mask' = $Mask;
+        'description' = $Description;
+        'sectionId' = $SectionId;
+        'masterSubnetId' = $MasterSubnetId;
+        'nameserverId' = $NameserverId;
+        'showName' = [int] $ShowName;
+        'scanAgent' = $ScanAgent;
+        'pingSubnet' = [int] $PingSubnet;
+        'discoverSubnet' = [int] $DiscoverSubnet;
+        'resolveDNS' = [int] $ResolveDns;
+        'threshold' = [int] $Threshold
     }
-    process{
-        if($(Invoke-PhpIpamExecute -method post -controller subnets -params $Params).success){
-            if($Params.ContainsKey('subnet')){
-                return $(get-PhpIpamAllSubnets|?{$_.subnet -eq $Params['subnet']})
-            }      
-        }
-    }
-    end{
 
-    }
+    return Invoke-PhpIpamExecute -method post -controller subnets -params $params
 }
 
-function Update-PhpIpamSubnet{
+function Update-PhpIpamSubnet {
     [cmdletBinding()]
     param(
-        [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
-        [validatescript({$_ -is [hashtable] -or $_ -is [psCustomObject]})]
-        $Params=@{}
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [validatescript( {$_ -is [hashtable] -or $_ -is [psCustomObject]})]
+        $Params = @{}
     )
-    BEGIN{
+    BEGIN {
 
     }
-    PROCESS{
+    PROCESS {
         return $(Invoke-PhpIpamExecute -method patch -controller subnets -params $Params).success
     }
-    END{
+    END {
 
     }
 }
