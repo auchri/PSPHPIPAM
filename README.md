@@ -8,18 +8,21 @@ Powershell module with support for the new API mode comming in phpIpam.
 # Using token auth (AppId + AppCode)
 New-PhpIpamSession -useAppKeyAuth -PhpIpamApiUrl $Url -AppID $AppId -AppKey $AppKey
 
- # using invoke-phpipamexecute operate API
- # /api/my_app/sections/	Returns all sections
- Invoke-PhpIpamExecute -method get -controller sections
+# Get all sections
+Get-PhpIpamAllSections
 
- # /api/my_app/sections/{id}/	Returns specific section ,id=1
- Invoke-PhpIpamExecute -method get -controller sections -identifiers @(1)
+# or:
+Invoke-PhpIpamExecute -method get -controller sections
 
- # /api/my_app/sections/{id}/subnets/	Returns all subnets in section
- Invoke-PhpIpamExecute -method get -controller sections -identifiers @(1,'subnets')
+# /api/my_app/sections/{id}/	Returns specific section ,id=1
+Invoke-PhpIpamExecute -method get -controller sections -identifiers @(1)
+Get-PhpIpamSectionsByID -ID 1
 
- # /api/my_app/sections/{name}/	Returns specific section by name
- Invoke-PhpIpamExecute -method get -controller sections -identifiers @('ipv6')
+# /api/my_app/sections/{id}/subnets/	Returns all subnets in section
+Invoke-PhpIpamExecute -method get -controller sections -identifiers @(1,'subnets')
+
+# /api/my_app/sections/{name}/	Returns specific section by name
+Invoke-PhpIpamExecute -method get -controller sections -identifiers @('ipv6')
 
 ```
 
