@@ -17,7 +17,14 @@ function New-PhpIpamLocation() {
     )
 
     # Ensure that double values have a dot instead of , - not handled correctly by phpipam :)
-    $parameters = @{"name" = $Name; "description" = $Description; "address" = $Address; "lat" = ($Lat -replace ',', '.'); "long" = ($Long -replace ',', '.') }
+    $parameters = @{"name" = $Name; "description" = $Description; "address" = $Address}
+
+    if($Lat -gt 0 -and $Long -gt 0) {
+        $parameters += @{'lat' = ($Lat -replace ',', '.'); 'long' = ($Long -replace ',', '.')}
+    } else {
+        $parameters += @{'lat' = ''; 'long' = ''}
+    }
+
     $parameters += $CustomFields
 
     return Invoke-PhpIpamExecute -method post -controller tools -identifiers @('locations') -params $parameters
@@ -65,5 +72,10 @@ function Update-PhpIpamLocation() {
         Add-PhpIpamCustomFieldsToExistingData -ExistingData $existingData -CustomFields $CustomFields
     }
 
-    return Invoke-PhpIpamExecute -method patch -controller tools -identifiers @('locations', $Id) -params $existingData
+    if($existingData.lat -eq 0 -and $existingData.long -eq 0) {
+        $existingData.lat = ''
+        $existingData.long = ''
+    }
+
+    Invoke-PhpIpamExecute -method patch -controller tools -identifiers @('locations', $Id) -params $existingData
 }
