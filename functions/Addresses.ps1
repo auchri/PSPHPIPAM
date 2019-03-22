@@ -69,21 +69,21 @@ function Get-PhpIpamAddresses{
     }
 }
 
-function Update-PhpIpamAddressByID{
+function Update-PhpIpamAddressById{
     [cmdletBinding()]
     Param(
          [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
-         [string]$ID,
+         [string]$Id,
 
          [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=1)]
-         $params
+         $Params
     )
     
     begin{
 
     }
     process{
-            return $(Invoke-PhpIpamExecute -method patch -controller addresses -identifiers @($ID) -params $params).data
+            return $(Invoke-PhpIpamExecute -method patch -controller addresses -identifiers @($Id) -params $Params).data
 
     }
 
@@ -92,26 +92,15 @@ function Update-PhpIpamAddressByID{
     }
 }
 
-function new-phpipamAddress{
+function New-PhpIpamAddress{
     [cmdletBinding()]
     Param(
      [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
-      $params
+      $Params
     )
-
-    begin{
-
-    }
-    process{
-            return $(Invoke-PhpIpamExecute -method post -controller addresses  -params $params).success
-
-    }
-
-    end{
-
-    }
+    
+    return $(Invoke-PhpIpamExecute -method post -controller addresses  -params $params).success
 }
-
 
 function Search-PhpIpamAddressByHostname{
  #/api/my_app/addresses/search_hostname/{hostname}/
@@ -134,3 +123,19 @@ function Search-PhpIpamAddressByHostname{
     }
 }
 
+function Search-PhpIpamAddress {
+ #/api/my_app/addresses/search/{ip}/
+    [cmdletBinding()]
+    Param(
+         [parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,position=0)]
+         [string] $IpAddress
+    )
+
+    $Data = Invoke-PhpIpamExecute -method get -controller addresses -identifiers @('search', $IpAddress)
+    
+    if($Data.success -ne $true) {
+        return $null
+    }
+
+    return $Data.data
+}

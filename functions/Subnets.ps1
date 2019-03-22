@@ -200,6 +200,10 @@ function New-PhpIpamSubnet {
     return Invoke-PhpIpamExecute -method post -controller subnets -params $params
 }
 
+function Search-SubnetByCidr([string] $cidr) {
+    return Invoke-PhpIpamExecute -controller subnets -method get -identifiers @('cidr', $cidr)
+}
+
 function Update-PhpIpamSubnet {
     [cmdletBinding()]
     param(
