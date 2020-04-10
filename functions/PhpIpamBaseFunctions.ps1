@@ -330,6 +330,7 @@ function New-PhpIpamSession{
             $uri = Get-PhpIpamUrl -PhpIpamApiUrl $PhpIpamApiUrl -AppID $AppID -Controller 'user'
             
             try {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 Invoke-RestMethod -Method get -Uri $uri -Headers @{'Token' = $AppKey}
             } catch {
                 if($_.Exception.Response.StatusCode.value__ -eq 409) { # Key is valid
